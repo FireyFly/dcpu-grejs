@@ -30,7 +30,7 @@ public class AssemblerLexer {
 	 * @return a list of tokens.
 	 */
 	public static List<Token> lex(String input, String filename) {
-		List<Token> res = new ArrayList<>();
+		List<Token> res = new ArrayList<Token>();
 		
 		int row   = 1
 		  , rowI0 = 0;
@@ -84,7 +84,7 @@ public class AssemblerLexer {
 				value = ":" + content;
 				
 			// Names & registers
-			} else if (Character.isAlphabetic(chr)) {
+			} else if (Character.isLetter(chr)) {
 				String content = upto(PATTERN_NOT_ALNUM, input, i);
 				
 				name  = "NAME";

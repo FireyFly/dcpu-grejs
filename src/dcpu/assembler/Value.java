@@ -183,37 +183,38 @@ public class Value {
 	}
 
 	private static int SPRToInt(String str) {
-		switch (str) {
-			case "POP"  : return 0x18;
-			case "PEEK" : return 0x19;
-			case "PUSH" : return 0x1a;
-			case "SP"   : return 0x1b;
-			case "PC"   : return 0x1c;
-			case "O"    : return 0x1d;
-			
-			default:
-				throw new IllegalArgumentException("No such SPR: " + str);
+		if (str.equals("POP")) {
+			return 0x18;
+		} else if (str.equals("PEEK")) {
+			return 0x19;
+		} else if (str.equals("PUSH")) {
+			return 0x1a;
+		} else if (str.equals("SP")) {
+			return 0x1b;
+		} else if (str.equals("PC")) {
+			return 0x1c;
+		} else if (str.equals("O")) {
+			return 0x1d;
+		} else {
+			throw new IllegalArgumentException(
+					"No such special-purpose register: " + str);
 		}
 	}
 
+	/**
+	 * Returns whether the given string represents a general-purpose register.
+	 */
 	private static boolean isGeneralPurposeRegister(String str) {
-		switch (str.toUpperCase()) {
-			case "A": case "B": case "C": case "X":
-			case "Y": case "Z": case "I": case "J":
-				return true;
-			
-			default:
-				return false;
-		}
+		// Note: str can't contain comma anyway, so we shouldn't get any false
+		// positives from the below.
+		return ("A,B,C,X,Y,Z,I,J".contains(str));
 	}
+	
+	/**
+	 * Returns whether the given string represents a special-purpose register.
+	 */
 	private static boolean isSpecialPurposeRegister(String str) {
-		switch (str.toUpperCase()) {
-			case "POP": case "PEEK": case "PUSH":
-			case "SP":  case "PC":   case "O":
-				return true;
-			
-			default:
-				return false;
-		}
+		// See above note for `isGeneralPurposeRegister`.
+		return ("POP,PEEK,PUSH,SP,PC,O".contains(str));
 	}
 }

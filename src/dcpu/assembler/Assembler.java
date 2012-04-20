@@ -132,16 +132,22 @@ public class Assembler {
 	 * Checks whether the given string is a proper mnemonic.
 	 */
 	private static boolean isMnemonic(String str) {
-		switch (str.toUpperCase()) {
-			case "JSR": case "SET": case "ADD": case "SUB":
-			case "MUL": case "DIV": case "MOD": case "SHL":
-			case "SHR": case "AND": case "BOR": case "XOR":
-			case "IFE": case "IFN": case "IFG": case "IFB":
+		String[] mnemonics = {
+				"JSR", "SET", "ADD", "SUB",
+				"MUL", "DIV", "MOD", "SHL",
+				"SHR", "AND", "BOR", "XOR",
+				"IFE", "IFN", "IFG", "IFB"
+		};
+		
+		String uppercased = str.toUpperCase();
+		
+		for (String mnem : mnemonics) {
+			if (uppercased.equals(mnem)) {
 				return true;
-				
-			default:
-				return false;
+			}
 		}
+		
+		return false;
 	}
 	
 	private static void assertSyntax(boolean cond, Token token, String message) {
