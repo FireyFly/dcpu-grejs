@@ -1,5 +1,7 @@
 package dcpu.assembler;
 
+import java.util.Map;
+
 
 /**
  * Represents a single DCPU assembly instruction.
@@ -54,7 +56,7 @@ public class Instruction {
 	/**
 	 * Assembles this instruction into an array of 1-3 shorts.
 	 */
-	public short[] assemble() {
+	public short[] assemble(Map<String, Integer> labelMap) {
 		int op = 0;
 		
 		if (this.opcode.isExtended()) {
@@ -62,7 +64,7 @@ public class Instruction {
 			op |= (this.b.getRawValue()  & 0x3f) << 10;
 			
 			if (this.b.getSize() > 0) {
-				return new short[] { (short)op, this.b.getNumber() };
+				return new short[] { (short)op, this.b.getNumber(labelMap) };
 			} else {
 				return new short[] { (short)op };
 			}
@@ -77,10 +79,10 @@ public class Instruction {
 			
 			int i = 1;
 			if (this.a.getSize() > 0) {
-				res[i++] = this.a.getNumber(); 
+				res[i++] = this.a.getNumber(labelMap); 
 			}
 			if (this.b.getSize() > 0) {
-				res[i++] = this.b.getNumber();
+				res[i++] = this.b.getNumber(labelMap);
 			}
 			
 			return res;

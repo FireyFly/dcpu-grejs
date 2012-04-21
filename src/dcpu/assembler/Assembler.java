@@ -88,7 +88,7 @@ public class Assembler {
 		ListIterator<Instruction> iter = instructions.listIterator();
 		for (int i=0; i<offsetCtr;) {
 			Instruction instr = iter.next();
-			short[]     words = instr.assemble();
+			short[]     words = instr.assemble(labelMap);
 			
 			for (short word : words) {
 				res[i++] = word;
