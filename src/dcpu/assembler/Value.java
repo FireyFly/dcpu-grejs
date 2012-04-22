@@ -1,6 +1,7 @@
 package dcpu.assembler;
 
 import java.util.List;
+import java.util.Map;
 
 import dcpu.assembler.parser.NumberToken;
 import dcpu.assembler.parser.SyntaxException;
@@ -23,12 +24,16 @@ public class Value {
 	
 	private static enum GPR { A, B, C, X, Y, Z, I, J }
 	
+	private List<Token> tokens;
 	private ValueType type;
 	private GPR       register;
 	private int       value;
 	private int       size;
+	private String    label;
+	private int       labelTokenId;
 	
 	public Value(List<Token> tokens) {
+		this.tokens = tokens;
 		if (tokens.size() == 1) {
 			Token token = tokens.get(0);
 			
@@ -44,7 +49,9 @@ public class Value {
 					this.value = SPRToInt(registerStr);
 					
 				} else {
-					throw new SyntaxException("Labels not yet implemented.");
+					this.type = ValueType.CONST;
+					this.label = token.getValue();
+					this.labelTokenId = 0;
 				}
 				
 			} else if (token.getType().equals("NUMBER")) {
@@ -78,7 +85,9 @@ public class Value {
 					this.value = SPRToInt(registerStr);
 					
 				} else {
-					throw new SyntaxException("Labels not yet implemented.");
+					this.type = ValueType.CONST_DEREF;
+					this.label = token.getValue();
+					this.labelTokenId = 1;
 				}
 				
 			} else if (token.getType().equals("NUMBER")) {
@@ -158,8 +167,18 @@ public class Value {
 	 * Returns the number value associated with this Value (i.e. what would go
 	 * in "next word").
 	 */
-	public short getNumber() {
-	    return (short)value;
+	public short getNumber(Map<String, Integer> labelMap) {
+		if (label == null) {
+			return (short)value;
+		} else {
+			Integer address = labelMap.get(label);
+			if (address != null){
+				return (short)(int)address;
+			} else {
+				throw new SyntaxException(tokens.get(labelTokenId),
+						"Label not defined.");
+			}
+		}
     }
 	
 	/**
