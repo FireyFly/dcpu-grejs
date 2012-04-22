@@ -92,7 +92,7 @@ public class AssemblerLexer {
 			
 			// Number literals
 			} else if (Character.isDigit(chr)) {
-				if (chr == '0' && input.length() >= i
+				if (chr == '0' && input.length() > i
 						       && input.charAt(i + 1) == 'x') {
 					// Hex literal: 0x1234
 					String content = upto(PATTERN_NOT_HEX, input, i + 2);

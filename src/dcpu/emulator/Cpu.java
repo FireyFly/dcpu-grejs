@@ -1,3 +1,5 @@
+package dcpu.emulator;
+
 public class Cpu {
 	public short[] memory = new short[0x10000 + 8 + 1 + 1 + 1 + 2];
 	private final int PC = 0x10000 + 8;
