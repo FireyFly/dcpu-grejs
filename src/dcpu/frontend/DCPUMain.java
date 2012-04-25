@@ -24,8 +24,10 @@ public class DCPUMain extends JFrame {
 		getContentPane().add(editorPane);
 		
 		RegisterViewer regViewer = new RegisterViewer();
-		springLayout.putConstraint(SpringLayout.NORTH, regViewer, 45, SpringLayout.NORTH, getContentPane());
-		springLayout.putConstraint(SpringLayout.WEST, regViewer, 50, SpringLayout.EAST, editorPane);
+		springLayout.putConstraint(SpringLayout.NORTH, regViewer, 10, SpringLayout.NORTH, getContentPane());
+		springLayout.putConstraint(SpringLayout.WEST, regViewer, 10, SpringLayout.EAST, editorPane);
+		springLayout.putConstraint(SpringLayout.SOUTH, regViewer, -10, SpringLayout.SOUTH, getContentPane());
+		springLayout.putConstraint(SpringLayout.EAST, regViewer, -10, SpringLayout.EAST, getContentPane());
 		getContentPane().add(regViewer);
 		
 		JMenuBar menuBar = new JMenuBar();
