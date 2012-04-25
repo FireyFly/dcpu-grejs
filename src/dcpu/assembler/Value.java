@@ -28,7 +28,7 @@ public class Value {
 	private ValueType type;
 	private GPR       register;
 	private int       value;
-	private int       size;
+	//private int       size;
 	private String    label;
 	private int       labelTokenId;
 	
@@ -113,31 +113,52 @@ public class Value {
 			
 			Token regToken, valueToken;
 			
-			if (t1.getType().equals("NAME")) {
-				// [A + x]
-				if (!isGeneralPurposeRegister(t1.getValue())
-						|| !t2.getType().equals("NUMBER")) {
+			if (t1.getType().equals("NAME") && t2.getType().equals("NAME")) {
+				// [Label + A] or [A + Label]
+				boolean t1IsGPR = isGeneralPurposeRegister(t1.getValue());
+				boolean t2IsGPR = isGeneralPurposeRegister(t2.getValue());
+				
+				if (t1IsGPR == t2IsGPR)
 					throw new SyntaxException(t1, "Unexpected token.");
+				
+				if (t1IsGPR) {
+					// Swap
+					t1 = tokens.get(3);
+					t2 = tokens.get(1);
 				}
 				
-				regToken   = t1;
-				valueToken = t2;
+				this.type = ValueType.GPR_RELATIVE_DEREF;
+				this.register = GPR.valueOf(t2.getValue().toUpperCase());
+				this.label = t1.getValue();
+				this.labelTokenId = 3;
 				
 			} else {
-				// [x + A]
-				if (!t2.getType().equals("NAME")
-						|| !isGeneralPurposeRegister(t2.getValue())
-						|| !t1.getType().equals("NUMBER")) {
-					throw new SyntaxException(t1, "Unexpected token.");
+				if (t1.getType().equals("NAME")) {
+					// [A + x]
+					if (!isGeneralPurposeRegister(t1.getValue())
+							|| !t2.getType().equals("NUMBER")) {
+						throw new SyntaxException(t1, "Unexpected token.");
+					}
+					
+					regToken   = t1;
+					valueToken = t2;
+					
+				} else {
+					// [x + A]
+					if (!t2.getType().equals("NAME")
+							|| !isGeneralPurposeRegister(t2.getValue())
+							|| !t1.getType().equals("NUMBER")) {
+						throw new SyntaxException(t1, "Unexpected token.");
+					}
+					
+					regToken   = t2;
+					valueToken = t1;
 				}
 				
-				regToken   = t2;
-				valueToken = t1;
+				this.type     = ValueType.GPR_RELATIVE_DEREF;
+				this.register = GPR.valueOf(regToken.getValue().toUpperCase());
+				this.value    = ((NumberToken)valueToken).getIntegerValue();
 			}
-			
-			this.type     = ValueType.GPR_RELATIVE_DEREF;
-			this.register = GPR.valueOf(regToken.getValue().toUpperCase());
-			this.value    = ((NumberToken)valueToken).getIntegerValue();
 			
 		} else {
 			String msg = "Couldn't parse tokens into a value."; 
@@ -234,6 +255,7 @@ public class Value {
 	 */
 	private static boolean isSpecialPurposeRegister(String str) {
 		// See above note for `isGeneralPurposeRegister`.
-		return ("POP,PEEK,PUSH,SP,PC,O".contains(str));
+		
+		return (",POP,PEEK,PUSH,SP,PC,O,".contains("," + str + ","));
 	}
 }

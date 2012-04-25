@@ -7,7 +7,22 @@ public class Cpu {
 	private final int O = 0x10000 + 10;
 	private final int Lit = 0x10000 + 11;
 	private long cycleCount = 0;
+	private MemoryCallback memCallback;
+	private boolean isRunning = false;
 	
+	public long getCycleCount() {
+		return cycleCount;
+	}
+	
+	public Cpu(MemoryCallback callback) {
+		memCallback = callback;
+	}
+	
+	public static interface MemoryCallback {
+		public void onMemoryChange(int address, short value);
+		public void onRegisterChange(int id, short value);
+		public void onCyclesChange(long cycleCount);
+	}
 	
 	private int getValue(short code, int op) {
 		switch(code) {
@@ -104,8 +119,12 @@ public class Cpu {
 				cycleCount += 2;
 				memory[--memory[SP] & 0xffff] = memory[PC];
 				memory[PC] = memory[getValue(b, 0)]; //b here is called a in the specification
+				
+				memoryTouched(memory[SP] & 0xffff);
 			} else {
-				throw new UnsupportedOperationException();
+				//throw new UnsupportedOperationException();
+				//Halt
+				isRunning = false;
 			}
 		} else {
 			int dst = getValue(a, 0);
@@ -185,8 +204,8 @@ public class Cpu {
 						memory[O] = 0;
 					} else {
 						int res = (memory[dst] & 0xffff) >>> (memory[src] & 0xffff);
-						memory[O] = (short)((memory[dst] << 16) >>> (memory[src] & 0xffff));
 						memory[dst] = (short)res;
+						memory[O] = (short)((memory[dst] << 16) >>> (memory[src] & 0xffff));
 					}
 					break;
 				}
@@ -241,13 +260,33 @@ public class Cpu {
 					break;
 				}
 			}
+			memoryTouched(dst);
 		}
+		memoryTouched(PC);
+		memoryTouched(SP);
+		memCallback.onCyclesChange(cycleCount);
+	}
+	
+	private void memoryTouched(int address) {
+		if (address < 65536)
+			memCallback.onMemoryChange(address, memory[address]);
+		else if (address < 65536 + 8 + 1 + 1 + 1) {
+			memCallback.onRegisterChange(address - 65536, memory[address]);
+		}
+	}
+	
+	public void initMem(short[] mem) {
+		for(int i=0; i<mem.length; i++)
+			memory[i] = mem[i];
+		
+		for(int i=mem.length; i<memory.length; i++)
+			memory[i] = 0;
 	}
 	
 	public static void main(String[] args){
 		short tal = (short)(-10);
 		System.out.println(tal & 0xffff);
-		Cpu cpu = new Cpu();
+		Cpu cpu = new Cpu(null);
 		int[] arr = new int[]{
 			0x7c01,	0x0030,
 			0x7de1, 0x1000, 0x0020,
@@ -271,15 +310,31 @@ public class Cpu {
 			0x7dc1, 0x001a
 		};
 		for(int i=0; i<arr.length; i++) cpu.memory[i] = (short)arr[i];
-		cpu.run();
+		cpu.start();
 		for(int i=0; i<cpu.memory.length; i++){
 			if (i % 32 == 0) System.out.print(i + ": ");
 			System.out.print(cpu.memory[i] + " ");
 			if (i % 32 == 31) System.out.println();
 		}
 	}
+	
+	public void resetRegisters() {
+		cycleCount = 0;
+		for(int i=0; i<11; i++){
+			memory[0x10000 + i] = 0;
+			memoryTouched(0x10000 + i);
+		}
+	}
+	
+	public void stop() {
+		isRunning = false;
+	}
 
-	public void run() {
-		for(int i=0; i<100; i++) executeNext();
+	public void start() {
+		if (isRunning)
+			return;
+		isRunning = true;
+		while(isRunning)
+			executeNext();
 	}
 }

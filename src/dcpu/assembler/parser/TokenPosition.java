@@ -28,8 +28,11 @@ public class TokenPosition {
 		return this.filename + ":" + this.row + ":" + this.column;
 	}
 	
-	private String getArrow() {
+	public String getArrow() {
 		StringBuilder builder = new StringBuilder(this.column);
+		
+		builder.append(this.line);
+		builder.append("\n");
 		
 		for (int i=0; i<this.column; i++) {
 			builder.append(' ');

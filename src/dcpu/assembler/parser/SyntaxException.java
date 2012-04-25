@@ -22,7 +22,7 @@ public class SyntaxException extends RuntimeException {
 	 * the error is, associated with the specified Token.
 	 */
 	public SyntaxException(Token token, String msg) {
-		super(msg + " (near " + token + ")");
+		super(msg + " (near " + token + ")\n" + token.getPosition().getArrow());
 		this.token = token;
 	}
 }
