@@ -24,8 +24,10 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -50,6 +52,8 @@ public class DCPUMain extends JFrame {
 	private JTextArea errorArea;
 	private SpringLayout springLayout;
 	private JLabel cycleCountLabel;
+	
+	private String lastFileName;
 	
 	public DCPUMain() {
 		cpu = new Cpu(new Cpu.MemoryCallback() {
@@ -216,7 +220,16 @@ public class DCPUMain extends JFrame {
 		
 		final JFileChooser chooser = new JFileChooser();
 		
-		JMenuItem mntmOpen = new JMenuItem("Open...");
+		final JMenuItem mntmOpen = new JMenuItem("Open...");
+		mnFile.add(mntmOpen);
+		
+		final JMenuItem mntmSave = new JMenuItem("Save");
+		mnFile.add(mntmSave);
+		
+		final JMenuItem mntmSaveAs = new JMenuItem("Save as...");
+		mnFile.add(mntmSaveAs);
+		
+		// Behaviour of menu choices.
 		mntmOpen.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				chooser.showOpenDialog(DCPUMain.this);
@@ -226,6 +239,7 @@ public class DCPUMain extends JFrame {
 					// User cancelled; didn't select a file.
 					return;
 				}
+				lastFileName = file.getAbsolutePath();
 				
 				try {
 					BufferedReader reader = new BufferedReader(new FileReader(file));
@@ -246,13 +260,59 @@ public class DCPUMain extends JFrame {
 				}
 			}
 		});
-		mnFile.add(mntmOpen);
 		
-		JMenuItem mntmSave = new JMenuItem("Save");
-		mnFile.add(mntmSave);
-		
-		JMenuItem mntmSaveAs = new JMenuItem("Save as...");
-		mnFile.add(mntmSaveAs);
+		/**
+		 * Writes the data in the editor pane to the file denoted by `lastFileName`.
+		 * NOTE: Assumes `lastFileName` to be set.
+		 */
+		final Runnable saveFile = new Runnable() {
+			@Override
+			public void run() {
+				try {
+					BufferedWriter writer = new BufferedWriter(new FileWriter(lastFileName));
+					String text = editor.getText();
+					
+					if (text == null) {
+						throw new IOException("Internal error.");
+					}
+					
+					writer.write(text);
+					writer.close();
+					
+				} catch (IOException ex) {
+					String msg = "Couldn't write to file: " + lastFileName + "\n"
+					           + "Reason: " + ex.getMessage();
+					JOptionPane.showMessageDialog(DCPUMain.this, msg, "Error!",
+							JOptionPane.ERROR_MESSAGE);
+				}
+				
+			}
+		};
+		mntmSave.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (lastFileName != null) {
+					saveFile.run();
+				} else {
+					// FIXME: Ugly
+					mntmSaveAs.getActionListeners()[0].actionPerformed(null);
+				}
+			}
+		});
+		mntmSaveAs.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				chooser.showSaveDialog(DCPUMain.this);
+				File file = chooser.getSelectedFile();
+				
+				if (file == null) {
+					// User cancelled; didn't select a file.
+					return;
+				}
+				
+				lastFileName = file.getAbsolutePath();
+				saveFile.run();
+			}
+		});
 		
 		JSeparator separator = new JSeparator();
 		mnFile.add(separator);
@@ -274,9 +334,15 @@ public class DCPUMain extends JFrame {
 		
 		JMenuItem mntmAbout = new JMenuItem("About...");
 		mnHelp.add(mntmAbout);
+		mntmAbout.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				JOptionPane.showMessageDialog(DCPUMain.this,
+						"This software was created by Emil Lenngren & Jonas Höglund. :-)",
+						"About...", JOptionPane.INFORMATION_MESSAGE);
+			}
+		});
 	}
-	
-//	private static final ActionListener 
 	
 	private void setupKeyListener() {
 		this.addKeyListener(new KeyAdapter() {
