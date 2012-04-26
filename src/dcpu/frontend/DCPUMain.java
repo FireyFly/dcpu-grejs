@@ -89,10 +89,12 @@ public class DCPUMain extends JFrame {
 		JPanel buttonPane = new JPanel();
 		buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.X_AXIS));
 		
-		JButton btnAssemble = new JButton("Assemble");
-		JButton btnRun      = new JButton("Run");
-		JButton btnStop     = new JButton("Stop");
-		JButton btnStep     = new JButton("Step");
+		final JButton btnAssemble = new JButton("Assemble");
+		final JButton btnRun      = new JButton("Run");
+		final JButton btnStop     = new JButton("Stop");
+		final JButton btnStep     = new JButton("Step");
+		
+		btnStop.setEnabled(false);
 
 		buttonPane.add(btnAssemble);
 		buttonPane.add(btnRun);
@@ -101,10 +103,35 @@ public class DCPUMain extends JFrame {
 		
 		getContentPane().add(buttonPane);
 		
+		// Use runnables as "first-class functions" because.. why not?
+		final Runnable startCpu = new Runnable() {
+			@Override
+			public void run() {
+				btnAssemble.setEnabled(true);
+				btnRun.setEnabled(false);
+				btnStop.setEnabled(true);
+				btnStep.setEnabled(false);
+				cpu.start();
+			}
+		};
+		final Runnable stopCpu = new Runnable() {
+			@Override
+			public void run() {
+				btnAssemble.setEnabled(true);
+				btnRun.setEnabled(true);
+				btnStop.setEnabled(false);
+				btnStep.setEnabled(true);
+				cpu.stop();
+			}
+		};
+		
 		btnAssemble.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent ev) {
 				String source = editor.getText();
+				
+				stopCpu.run();
+				
 				// TODO: Use correct filename.
 				try {
 					short[] binary = Assembler.assemble(source, "<input>");
@@ -124,12 +151,7 @@ public class DCPUMain extends JFrame {
 		btnRun.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				cpuThread = new Thread(new Runnable() {
-					@Override
-					public void run() {
-						cpu.start();
-					}
-				});
+				cpuThread = new Thread(startCpu);
 				cpuThread.start();
 			}
 		});
@@ -137,7 +159,8 @@ public class DCPUMain extends JFrame {
 		btnStop.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				cpu.stop();
+				stopCpu.run();
+				cpuThread.interrupt();
 			}
 		});
 		
