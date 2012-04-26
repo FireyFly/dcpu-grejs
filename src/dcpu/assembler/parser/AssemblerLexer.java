@@ -38,7 +38,7 @@ public class AssemblerLexer {
 		String line = AssemblerLexer.upto('\n', input, 0);
 
 		// Iterate over the input, adjusting the input pointer as necessary.
-		for (int i = 0, length = input.length(); i < length; i++) {
+		for (int i = 0, length = input.length(); i < length; ) {
 			char chr = input.charAt(i);
 			
 			String name, value;
@@ -47,6 +47,7 @@ public class AssemblerLexer {
 			// Ignore all non-LF whitespace (for all purposes other than to
 			// separate tokens).
 			if (AssemblerLexer.isIgnoreable(chr)) {
+				i++;
 				continue;
 
 			// Line feed tokens
@@ -129,9 +130,9 @@ public class AssemblerLexer {
 			}
 			
 			// Skip over the characters that the token consumed.
-			i += value.length() - 1;
+			i += value.length();
 		}
-
+		
 		return res;
 	}
 

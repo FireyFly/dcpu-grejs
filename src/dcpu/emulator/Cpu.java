@@ -325,6 +325,7 @@ public class Cpu {
 	
 	public void resetRegisters() {
 		cycleCount = 0;
+		memCallback.onCyclesChange(0);
 		for(int i=0; i<11; i++){
 			memory[0x10000 + i] = 0;
 			memoryTouched(0x10000 + i);

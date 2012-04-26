@@ -115,7 +115,9 @@ public class DCPUMain extends JFrame {
 		btnStop     = new JButton("Stop");
 		btnStep     = new JButton("Step");
 		
+		btnRun.setEnabled(false);
 		btnStop.setEnabled(false);
+		btnStep.setEnabled(false);
 
 		buttonPane.add(btnAssemble);
 		buttonPane.add(btnRun);
@@ -163,6 +165,11 @@ public class DCPUMain extends JFrame {
 					errorArea.setText(""); // Clear the error label content.
 					
 					lastBinary = binary;
+					
+					btnAssemble.setEnabled(true);
+					btnRun.setEnabled(true);
+					btnStop.setEnabled(false);
+					btnStep.setEnabled(true);
 					
 				} catch (SyntaxException ex) {
 					errorArea.setText(ex.getMessage());
@@ -251,6 +258,12 @@ public class DCPUMain extends JFrame {
 		// Behaviour of menu choices.
 		mntmOpen.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				if (btnStop.isEnabled()) {
+					String msg = "Cannot open file while the emulator is running.";
+					JOptionPane.showMessageDialog(DCPUMain.this, msg, "Error!",
+							JOptionPane.ERROR_MESSAGE);
+					return;
+				}
 				chooser.showOpenDialog(DCPUMain.this);
 				File file = chooser.getSelectedFile();
 				
@@ -270,6 +283,11 @@ public class DCPUMain extends JFrame {
 					}
 					
 					editor.setText(builder.toString());
+					
+					btnAssemble.setEnabled(true);
+					btnRun.setEnabled(false);
+					btnStop.setEnabled(false);
+					btnStep.setEnabled(false);
 					
 				} catch (IOException ex) {
 					String msg = "Couldn't open file: " + file.toString() + "\n"
@@ -344,6 +362,13 @@ public class DCPUMain extends JFrame {
 		
 		mntmOpenBinary.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				if (btnStop.isEnabled()) {
+					String msg = "Cannot open binary blob while the emulator is running.";
+					JOptionPane.showMessageDialog(DCPUMain.this, msg, "Error!",
+							JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				
 				chooser.showOpenDialog(DCPUMain.this);
 				File file = chooser.getSelectedFile();
 				
@@ -382,6 +407,11 @@ public class DCPUMain extends JFrame {
 					ramViewer.replaceMemory(Arrays.copyOf(binary, 65536));
 					
 					reader.close();
+					
+					btnAssemble.setEnabled(true);
+					btnRun.setEnabled(true);
+					btnStop.setEnabled(false);
+					btnStep.setEnabled(true);
 					
 				} catch (IOException ex) {
 					String msg = "Couldn't open file: " + file.toString() + "\n"
