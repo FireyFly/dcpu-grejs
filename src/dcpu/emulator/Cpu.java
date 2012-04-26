@@ -22,6 +22,7 @@ public class Cpu {
 		public void onMemoryChange(int address, short value);
 		public void onRegisterChange(int id, short value);
 		public void onCyclesChange(long cycleCount);
+		public void onHalt();
 	}
 	
 	private int getValue(short code, int op) {
@@ -126,6 +127,7 @@ public class Cpu {
 				//throw new UnsupportedOperationException();
 				//Halt
 				isRunning = false;
+				memCallback.onHalt();
 			}
 		} else {
 			int dst = getValue(a, 0);

@@ -46,7 +46,6 @@ import dcpu.frontend.RamViewer;
 public class DCPUMain extends JFrame {
 	private RegisterViewer regViewer;
 	private RamViewer ramViewer;
-	private JTextArea editor;
 	private Cpu cpu;
 	
 	private Thread cpuThread;
@@ -54,6 +53,12 @@ public class DCPUMain extends JFrame {
 	private JTextArea errorArea;
 	private SpringLayout springLayout;
 	private JLabel cycleCountLabel;
+	
+	private JTextArea editor;
+	private JButton btnAssemble;
+	private JButton btnRun;
+	private JButton btnStop;
+	private JButton btnStep;
 	
 	private String lastFileName;
 	
@@ -74,6 +79,14 @@ public class DCPUMain extends JFrame {
 			@Override
 			public void onCyclesChange(long cycleCount) {
 				cycleCountLabel.setText("Cycles: " + cycleCount);
+			}
+			
+			@Override
+			public void onHalt() {
+				btnAssemble.setEnabled(true);
+				btnRun.setEnabled(true);
+				btnStop.setEnabled(false);
+				btnStep.setEnabled(true);
 			}
 		});
 		
@@ -97,10 +110,10 @@ public class DCPUMain extends JFrame {
 		JPanel buttonPane = new JPanel();
 		buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.X_AXIS));
 		
-		final JButton btnAssemble = new JButton("Assemble");
-		final JButton btnRun      = new JButton("Run");
-		final JButton btnStop     = new JButton("Stop");
-		final JButton btnStep     = new JButton("Step");
+		btnAssemble = new JButton("Assemble");
+		btnRun      = new JButton("Run");
+		btnStop     = new JButton("Stop");
+		btnStep     = new JButton("Step");
 		
 		btnStop.setEnabled(false);
 
@@ -115,7 +128,7 @@ public class DCPUMain extends JFrame {
 		final Runnable startCpu = new Runnable() {
 			@Override
 			public void run() {
-				btnAssemble.setEnabled(true);
+				btnAssemble.setEnabled(false);
 				btnRun.setEnabled(false);
 				btnStop.setEnabled(true);
 				btnStep.setEnabled(false);
