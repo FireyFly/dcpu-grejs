@@ -117,8 +117,9 @@ public class Cpu {
 			if (a == 0x01){
 				//JSR
 				cycleCount += 2;
+				short next = memory[getValue(b, 0)]; //b here is called a in the specification
 				memory[--memory[SP] & 0xffff] = memory[PC];
-				memory[PC] = memory[getValue(b, 0)]; //b here is called a in the specification
+				memory[PC] = next;
 				
 				memoryTouched(memory[SP] & 0xffff);
 			} else {
@@ -140,24 +141,24 @@ public class Cpu {
 				case 0x2: {
 					cycleCount += 2;
 					int res = (memory[dst] & 0xffff) + (memory[src] & 0xffff);
-					memory[O] = (short)(res > 0xffff ? 0x0001 : 0x0000);
 					memory[dst] = (short)(res);
+					memory[O] = (short)(res > 0xffff ? 0x0001 : 0x0000);
 					break;
 				}
 				//SUB
 				case 0x3: {
 					cycleCount += 2;
 					int res = (memory[dst] & 0xffff) - (memory[src] & 0xffff);
-					memory[O] = (short)(res < 0 ? 0xffff : 0x0000);
 					memory[dst] = (short)(res);
+					memory[O] = (short)(res < 0 ? 0xffff : 0x0000);
 					break;
 				}
 				//MUL
 				case 0x4: {
 					cycleCount += 2;
 					int res = (memory[dst] & 0xffff) * (memory[src] & 0xffff);
-					memory[O] = (short)(res >>> 16);
 					memory[dst] = (short)res;
+					memory[O] = (short)(res >>> 16);
 					break;
 				}
 				//DIV
@@ -168,8 +169,9 @@ public class Cpu {
 						memory[O] = 0;
 					} else {
 						int res = (memory[dst] & 0xffff) / (memory[src] & 0xffff);
-						memory[O] = (short)(((long)(memory[dst] & 0xffff) << 16) / (memory[src] & 0xffff));
+						short o = (short)(((long)(memory[dst] & 0xffff) << 16) / (memory[src] & 0xffff));
 						memory[dst] = (short)res;
+						memory[O] = o;
 					}
 					break;
 				}
@@ -191,8 +193,8 @@ public class Cpu {
 						memory[O] = 0;
 					} else {
 						int res = (memory[dst] & 0xffff) << (memory[src] & 0xffff);
-						memory[O] = (short)(res >>> 16);
 						memory[dst] = (short)res;
+						memory[O] = (short)(res >>> 16);
 					}
 					break;
 				}
@@ -204,8 +206,9 @@ public class Cpu {
 						memory[O] = 0;
 					} else {
 						int res = (memory[dst] & 0xffff) >>> (memory[src] & 0xffff);
+						short o = (short)((memory[dst] << 16) >>> (memory[src] & 0xffff));
 						memory[dst] = (short)res;
-						memory[O] = (short)((memory[dst] << 16) >>> (memory[src] & 0xffff));
+						memory[O] = o;
 					}
 					break;
 				}

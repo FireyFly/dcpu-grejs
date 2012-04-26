@@ -28,6 +28,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -54,6 +56,8 @@ public class DCPUMain extends JFrame {
 	private JLabel cycleCountLabel;
 	
 	private String lastFileName;
+	
+	private short[] lastBinary;
 	
 	public DCPUMain() {
 		cpu = new Cpu(new Cpu.MemoryCallback() {
@@ -144,6 +148,8 @@ public class DCPUMain extends JFrame {
 					ramViewer.replaceMemory(Arrays.copyOf(binary, 65536));
 					
 					errorArea.setText(""); // Clear the error label content.
+					
+					lastBinary = binary;
 					
 				} catch (SyntaxException ex) {
 					errorArea.setText(ex.getMessage());
@@ -317,11 +323,102 @@ public class DCPUMain extends JFrame {
 		JSeparator separator = new JSeparator();
 		mnFile.add(separator);
 		
-		JMenuItem mntmNewMenuItem = new JMenuItem("Open binary...");
-		mnFile.add(mntmNewMenuItem);
+		JMenuItem mntmOpenBinary = new JMenuItem("Open binary...");
+		mnFile.add(mntmOpenBinary);
 		
 		JMenuItem mntmSaveBinary = new JMenuItem("Save binary...");
 		mnFile.add(mntmSaveBinary);
+		
+		mntmOpenBinary.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				chooser.showOpenDialog(DCPUMain.this);
+				File file = chooser.getSelectedFile();
+				
+				if (file == null) {
+					// User cancelled; didn't select a file.
+					return;
+				}
+				
+				try {
+					FileInputStream reader = new FileInputStream(file);
+					
+					byte[] input = new byte[65536*2];
+					int pos = 0;
+					for(;;) {
+						int numRead = reader.read(input, pos, 4096);
+						if (numRead == -1)
+							break;
+						pos += numRead;
+					}
+					
+					if ((pos & 1) == 1) {
+						String msg = "Couldn't open file: " + file.toString() + "\n"
+						           + "Reason: Number of bytes in binary file not a multiple of 2";
+						JOptionPane.showMessageDialog(DCPUMain.this, msg, "Error!",
+								JOptionPane.ERROR_MESSAGE);
+						return;
+					}
+					
+					short[] binary = new short[pos/2];
+					for(int i=0; i<pos; i+=2) {
+						binary[i/2] = (short)((input[i] & 0xff) | (input[i+1] << 8));
+					}
+					
+					cpu.resetRegisters();
+					cpu.initMem(binary);
+					ramViewer.replaceMemory(Arrays.copyOf(binary, 65536));
+					
+					reader.close();
+					
+				} catch (IOException ex) {
+					String msg = "Couldn't open file: " + file.toString() + "\n"
+					           + "Reason: " + ex.getMessage();
+					JOptionPane.showMessageDialog(DCPUMain.this, msg, "Error!",
+							JOptionPane.ERROR_MESSAGE);
+				}
+			}
+		});
+		
+		mntmSaveBinary.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if (lastBinary == null) {
+					String msg = "You must assembly something first before you can save the binary blob.";
+					JOptionPane.showMessageDialog(DCPUMain.this, msg, "Error!",
+							JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				chooser.showOpenDialog(DCPUMain.this);
+				File file = chooser.getSelectedFile();
+				
+				if (file == null) {
+					// User cancelled; didn't select a file.
+					return;
+				}
+				
+				try {
+					byte[] buffer = new byte[4096];
+					FileOutputStream writer = new FileOutputStream(file);
+					int left = lastBinary.length;
+					
+					while(left > 0) {
+						int num = left > 2048 ? 2048 : left;
+						for(int i=0; i<num; i++) {
+							buffer[i*2] = (byte)(lastBinary[i] & 0xff);
+							buffer[i*2+1] = (byte)(lastBinary[i] >> 8);
+						}
+						writer.write(buffer, 0, num*2);
+						left -= num;
+					}
+					
+					writer.close();
+				} catch (IOException ex) {
+					String msg = "Couldn't write to file: " + file.toString() + "\n"
+					           + "Reason: " + ex.getMessage();
+					JOptionPane.showMessageDialog(DCPUMain.this, msg, "Error!",
+							JOptionPane.ERROR_MESSAGE);
+				}
+			}
+		});
 		
 		JSeparator separator_1 = new JSeparator();
 		mnFile.add(separator_1);
